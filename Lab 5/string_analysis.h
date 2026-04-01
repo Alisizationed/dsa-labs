@@ -1,12 +1,8 @@
 #ifndef LAB_5_STRING_ANALYSIS_H
 #define LAB_5_STRING_ANALYSIS_H
 
-char* get_sentence();
+int nr_declarative_sentences(char* str);
 
-void print_sentence(char* str, char* file_name);
-
-void print_first_sentence_length(int n);
-
-void print_file(int nr, int length, char* file_name);
+int first_sentence_length(char* str);
 
 #endif //LAB_5_STRING_ANALYSIS_H
