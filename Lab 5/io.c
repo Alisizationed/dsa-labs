@@ -4,7 +4,7 @@
 char* get_sentence() {
     char* sentence = (char*) malloc(sizeof(char) * 200);
     printf("Enter sentence: ");
-    scanf("%[^\n]", sentence);
+    fgets(sentence, 199, stdin);
     return sentence;
 }
 
@@ -12,8 +12,9 @@ void print_sentence(char* str, char* file_name) {
     FILE* f = fopen(file_name, "w");
     if (f == NULL) {
         printf("Error opening file!\n");
+        return;
     }
-    fprintf(f,"%s\n", str);
+    fprintf(f, "%s", str);
     fclose(f);
 }
 
@@ -29,6 +30,7 @@ void print_file(int nr, int length, char* file_name) {
     FILE* f = fopen(file_name, "w");
     if (f == NULL) {
         printf("Error opening file!\n");
+        return;
     }
     fprintf(f,"The number of the declarative sentences is %d.\n", nr);
     fprintf(f,"The length of the first sentence is %d.\n", length);
