@@ -5,7 +5,7 @@
 #include "string_analysis.h"
 
 int main() {
-    char* string = get_sentence();
+    char* string = get_sentence("stdin");
     print_sentence(string, "input.txt");
     int option;
     do {

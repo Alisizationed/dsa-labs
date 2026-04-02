@@ -1,10 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-char* get_sentence() {
+char* get_sentence(char* file_name) {
+    FILE* f = stdin;
+    if (strcmp(file_name, "stdin") != 0) {
+        f = fopen(file_name, "r");
+    }
     char* sentence = (char*) malloc(sizeof(char) * 200);
     printf("Enter sentence: ");
-    fgets(sentence, 199, stdin);
+    fgets(sentence, 199, f);
+    if (f != stdin) {
+        fclose(f);
+    }
     return sentence;
 }
 
