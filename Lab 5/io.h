@@ -1,7 +1,7 @@
 #ifndef LAB_5_IO_H
 #define LAB_5_IO_H
 
-char* get_sentence();
+char* get_sentence(char* file_name);
 
 void print_sentence(char* str, char* file_name);
 
