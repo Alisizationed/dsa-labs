@@ -7,7 +7,7 @@ Deque *deque_create(int initial_capacity) {
     Deque *d = malloc(sizeof(Deque));
     d->customers = malloc(initial_capacity * sizeof(uBankCustomer));
     d->MAX_CUSTOMERS = initial_capacity;
-    d->front = 0;
+    d->front = -1;
     d->rear = -1;
     return d;
 }
@@ -71,7 +71,7 @@ uBankCustomer deque_pop_front(Deque *d) {
     }
     uBankCustomer removed = d->customers[d->front];
     if (d->front == d->rear) {
-        d->front = 0;
+        d->front = -1;
         d->rear = -1;
     } else {
         d->front = (d->front + 1) % d->MAX_CUSTOMERS;
@@ -88,7 +88,7 @@ uBankCustomer deque_pop_back(Deque *d) {
     }
     uBankCustomer removed = d->customers[d->rear];
     if (d->front == d->rear) {
-        d->front = 0;
+        d->front = -1;
         d->rear = -1;
     } else {
         d->rear = (d->rear - 1 + d->MAX_CUSTOMERS) % d->MAX_CUSTOMERS;
@@ -116,11 +116,11 @@ uBankCustomer deque_peek_back(Deque *d) {
 
 uBankCustomer *deque_find_by_no(Deque *d, int account_no) {
     if (deque_is_empty(d)) return NULL;
-    int idx = d->front;
+    int j = d->front;
     for (int i = 0; i < deque_size(d); i++) {
-        if ((int) d->customers[idx].account_no == account_no)
-            return &d->customers[idx];
-        idx = (idx + 1) % d->MAX_CUSTOMERS;
+        if ((int) d->customers[j].account_no == account_no)
+            return &d->customers[j];
+        j = (j + 1) % d->MAX_CUSTOMERS;
     }
     return NULL;
 }
@@ -135,12 +135,8 @@ uBankCustomer *deque_find_by_position(Deque *d, int pos) {
 }
 
 void deque_print(Deque *d, FILE *file) {
-    if (deque_is_empty(d)) {
-        fprintf(file, "Deque is empty\n");
-        return;
-    }
-    int j = d->front;
-    int size = deque_size(d);
+    if (deque_is_empty(d)) { fprintf(file, "Deque is empty\n"); return; }
+    int j = d->front, size = deque_size(d);
     for (int i = 0; i < size; i++) {
         fprintf(file, "[%d] ", i);
         u_display_bank_customer(&d->customers[j], file);
@@ -151,50 +147,28 @@ void deque_print(Deque *d, FILE *file) {
 
 void deque_save_to_file(Deque *d, const char *filename, _Bool binary) {
     FILE *f = fopen(filename, binary ? "wb" : "w");
-    if (!f) {
-        printf("Cannot open: %s\n", filename);
-        return;
-    }
-    int size = deque_size(d);
+    if (!f) { printf("Cannot open: %s\n", filename); return; }
+    int size = deque_size(d), j = d->front;
     if (binary) {
         fwrite(&size, sizeof(int), 1, f);
-        int idx = d->front;
-        for (int i = 0; i < size; i++) {
-            fwrite(&d->customers[idx], sizeof(uBankCustomer), 1, f);
-            idx = (idx + 1) % d->MAX_CUSTOMERS;
-        }
+        for (int i = 0; i < size; i++) { fwrite(&d->customers[j], sizeof(uBankCustomer), 1, f); j = (j+1)%d->MAX_CUSTOMERS; }
     } else {
         fprintf(f, "%d\n", size);
-        int idx = d->front;
-        for (int i = 0; i < size; i++) {
-            u_display_bank_customer(&d->customers[idx], f);
-            idx = (idx + 1) % d->MAX_CUSTOMERS;
-        }
+        for (int i = 0; i < size; i++) { u_display_bank_customer(&d->customers[j], f); j = (j+1)%d->MAX_CUSTOMERS; }
     }
     fclose(f);
 }
 
 void deque_load_from_file(Deque *d, const char *filename, _Bool binary) {
     FILE *f = fopen(filename, binary ? "rb" : "r");
-    if (!f) {
-        printf("Cannot open: %s\n", filename);
-        return;
-    }
+    if (!f) { printf("Cannot open: %s\n", filename); return; }
     int size;
     if (binary) {
         fread(&size, sizeof(int), 1, f);
-        for (int i = 0; i < size; i++) {
-            uBankCustomer c;
-            fread(&c, sizeof(uBankCustomer), 1, f);
-            deque_push_back(d, c);
-        }
+        for (int i = 0; i < size; i++) { uBankCustomer c; fread(&c, sizeof(uBankCustomer), 1, f); deque_push_back(d, c); }
     } else {
         fscanf(f, "%d", &size);
-        for (int i = 0; i < size; i++) {
-            uBankCustomer c;
-            u_read_customer(&c, f);
-            deque_push_back(d, c);
-        }
+        for (int i = 0; i < size; i++) { uBankCustomer c; u_read_customer(&c, f); deque_push_back(d, c); }
     }
     fclose(f);
 }

@@ -7,7 +7,7 @@ CircularQueue *circular_queue_create(int capacity) {
     CircularQueue *q = malloc(sizeof(CircularQueue));
     q->customers = malloc(capacity * sizeof(uBankCustomer));
     q->MAX_CUSTOMERS = capacity;
-    q->front = 0;
+    q->front = -1;
     q->rear = -1;
     return q;
 }

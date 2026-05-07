@@ -28,13 +28,13 @@ int main() {
             simple_queue_menu();
             break;
         case 3:
-            circular_queue_menu();
+            deque_menu();
             break;
         case 4:
-            priority_queue_menu();
+            circular_queue_menu();
             break;
         case 5:
-            deque_menu();
+            priority_queue_menu();
             break;
         default:
             printf("Invalid choice\n");

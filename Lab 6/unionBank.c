@@ -40,7 +40,9 @@ void u_read_customer(uBankCustomer *customer, FILE* file) {
         scanf("%d/%d/%d", &day, &month, &year);
         printf("Balance: ");
         scanf("%lf", &customer->balance);
+        u_save_current_date(&(customer->last_account_access_date));
     } else {
+        int day1, month1, year1;
         fscanf(file, "%u", &acc_no);
         customer->account_no = acc_no;
         int t2;
@@ -48,12 +50,16 @@ void u_read_customer(uBankCustomer *customer, FILE* file) {
         customer->type = (enum uAccountType)t2;
         fscanf(file, "%d/%d/%d", &day, &month, &year);
         fscanf(file, "%lf", &customer->balance);
+        fscanf(file, "%d/%d/%d", &day1, &month1, &year1);
+        customer->last_account_access_date.day = 0;
+        customer->last_account_access_date.day += day<<26;
+        customer->last_account_access_date.month += month<<22;
+        customer->last_account_access_date.year += year;
     }
     customer->opening_date.day = 0;
     customer->opening_date.day += day<<26;
     customer->opening_date.month += month<<22;
     customer->opening_date.year += year;
-    u_save_current_date(&(customer->last_account_access_date));
 }
 
 // Read an array of bank customers
