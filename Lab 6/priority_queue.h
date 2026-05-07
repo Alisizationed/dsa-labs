@@ -9,7 +9,7 @@ typedef struct {
 } PriorityQueueElement;
 
 typedef struct {
-    PriorityQueueElement *elements;
+    PriorityQueueElement *pcustomers;
     int size;
     int capacity;
 } PriorityQueue;

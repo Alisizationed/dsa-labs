@@ -17,10 +17,6 @@ void deque_destroy(Deque *d) {
     free(d);
 }
 
-_Bool deque_is_full(Deque *d) {
-    return deque_size(d) == d->MAX_CUSTOMERS;
-}
-
 // Function to check if the deque is empty
 _Bool deque_is_empty(Deque *d) {
     return (d->front == -1);
@@ -32,13 +28,24 @@ int deque_size(Deque *d) {
     return (d->rear - d->front + d->MAX_CUSTOMERS) % d->MAX_CUSTOMERS + 1;
 }
 
+_Bool deque_is_full(Deque *d) {
+    return deque_size(d) == d->MAX_CUSTOMERS;
+}
+
 // Function to insert an element at the front of the deque
 void deque_push_front(Deque *d, uBankCustomer customer) {
     if (deque_is_full(d)) {
-        printf("Deque is full\n");
-        return;
-    }
-    if (deque_is_empty(d)) {
+        int old_size = d->MAX_CUSTOMERS;
+        uBankCustomer *temp = malloc(old_size * 2 * sizeof(uBankCustomer));
+        if (temp == NULL) return;
+        for (int i = 0; i < old_size; i++)
+            temp[i] = d->customers[(d->front + i) % old_size];
+        free(d->customers);
+        d->customers = temp;
+        d->front = 0;
+        d->rear = old_size - 1;
+        d->MAX_CUSTOMERS = old_size * 2;
+    } else if (deque_is_empty(d)) {
         d->front = 0;
         d->rear = 0;
     } else {
@@ -50,15 +57,21 @@ void deque_push_front(Deque *d, uBankCustomer customer) {
 // Function to insert an element at the rear of the deque
 void deque_push_back(Deque *d, uBankCustomer customer) {
     if (deque_is_full(d)) {
-        printf("Deque is full\n");
-        return;
+        int old_size = d->MAX_CUSTOMERS;
+        uBankCustomer *temp = malloc(old_size * 2 * sizeof(uBankCustomer));
+        if (temp == NULL) return;
+        for (int i = 0; i < old_size; i++)
+            temp[i] = d->customers[(d->front + i) % old_size];
+        free(d->customers);
+        d->customers = temp;
+        d->front = 0;
+        d->rear = old_size - 1;
+        d->MAX_CUSTOMERS = old_size * 2;
     }
     if (deque_is_empty(d)) {
         d->front = 0;
         d->rear = 0;
-    } else {
-        d->rear = (d->rear + 1) % d->MAX_CUSTOMERS;
-    }
+    } else d->rear = (d->rear + 1) % d->MAX_CUSTOMERS;
     d->customers[d->rear] = customer;
 }
 
@@ -135,7 +148,10 @@ uBankCustomer *deque_find_by_position(Deque *d, int pos) {
 }
 
 void deque_print(Deque *d, FILE *file) {
-    if (deque_is_empty(d)) { fprintf(file, "Deque is empty\n"); return; }
+    if (deque_is_empty(d)) {
+        fprintf(file, "Deque is empty\n");
+        return;
+    }
     int j = d->front, size = deque_size(d);
     for (int i = 0; i < size; i++) {
         fprintf(file, "[%d] ", i);
@@ -147,34 +163,54 @@ void deque_print(Deque *d, FILE *file) {
 
 void deque_save_to_file(Deque *d, const char *filename, _Bool binary) {
     FILE *f = fopen(filename, binary ? "wb" : "w");
-    if (!f) { printf("Cannot open: %s\n", filename); return; }
+    if (!f) {
+        printf("Cannot open: %s\n", filename);
+        return;
+    }
     int size = deque_size(d), j = d->front;
     if (binary) {
         fwrite(&size, sizeof(int), 1, f);
-        for (int i = 0; i < size; i++) { fwrite(&d->customers[j], sizeof(uBankCustomer), 1, f); j = (j+1)%d->MAX_CUSTOMERS; }
+        for (int i = 0; i < size; i++) {
+            fwrite(&d->customers[j], sizeof(uBankCustomer), 1, f);
+            j = (j + 1) % d->MAX_CUSTOMERS;
+        }
     } else {
         fprintf(f, "%d\n", size);
-        for (int i = 0; i < size; i++) { u_display_bank_customer(&d->customers[j], f); j = (j+1)%d->MAX_CUSTOMERS; }
+        for (int i = 0; i < size; i++) {
+            u_display_bank_customer(&d->customers[j], f);
+            j = (j + 1) % d->MAX_CUSTOMERS;
+        }
     }
     fclose(f);
 }
 
 void deque_load_from_file(Deque *d, const char *filename, _Bool binary) {
     FILE *f = fopen(filename, binary ? "rb" : "r");
-    if (!f) { printf("Cannot open: %s\n", filename); return; }
+    if (!f) {
+        printf("Cannot open: %s\n", filename);
+        return;
+    }
     int size;
     if (binary) {
         fread(&size, sizeof(int), 1, f);
-        for (int i = 0; i < size; i++) { uBankCustomer c; fread(&c, sizeof(uBankCustomer), 1, f); deque_push_back(d, c); }
+        for (int i = 0; i < size; i++) {
+            uBankCustomer c;
+            fread(&c, sizeof(uBankCustomer), 1, f);
+            deque_push_back(d, c);
+        }
     } else {
         fscanf(f, "%d", &size);
-        for (int i = 0; i < size; i++) { uBankCustomer c; u_read_customer(&c, f); deque_push_back(d, c); }
+        for (int i = 0; i < size; i++) {
+            uBankCustomer c;
+            u_read_customer(&c, f);
+            deque_push_back(d, c);
+        }
     }
     fclose(f);
 }
 
 void deque_menu() {
-    Deque *d = deque_create(10);
+    Deque *d = deque_create(2);
     int choice;
 
     do {

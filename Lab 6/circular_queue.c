@@ -29,7 +29,6 @@ _Bool circular_queue_is_full(CircularQueue *q) {
 
 // Get current size of circular queue
 int circular_queue_size(CircularQueue *q) {
-
     if (circular_queue_is_empty(q))
         return 0;
 
@@ -41,8 +40,16 @@ int circular_queue_size(CircularQueue *q) {
 
 void circular_queue_enqueue(CircularQueue *q, uBankCustomer customer) {
     if (circular_queue_is_full(q)) {
-        printf("Queue is full\n");
-        return;
+        int old_size = q->MAX_CUSTOMERS;
+        uBankCustomer *temp = malloc(old_size * 2 * sizeof(uBankCustomer));
+        if (temp == NULL) return;
+        for (int i = 0; i < old_size; i++)
+            temp[i] = q->customers[(q->front + i) % old_size];
+        free(q->customers);
+        q->customers = temp;
+        q->front = 0;
+        q->rear = old_size - 1;
+        q->MAX_CUSTOMERS = old_size * 2;
     }
     if (q->front == -1) q->front = 0; // First element
 
@@ -81,7 +88,7 @@ uBankCustomer *circular_queue_find_by_no(CircularQueue *q, int account_no) {
     int size = circular_queue_size(q);
     for (int i = 0; i < size; i++) {
         int j = (q->front + i) % q->MAX_CUSTOMERS;
-        if ((int)q->customers[j].account_no == account_no)
+        if ((int) q->customers[j].account_no == account_no)
             return &q->customers[j];
     }
     return NULL;
@@ -110,7 +117,10 @@ void circular_queue_print(CircularQueue *q, FILE *file) {
 
 void circular_queue_save_to_file(CircularQueue *q, const char *filename, _Bool binary) {
     FILE *f = fopen(filename, binary ? "wb" : "w");
-    if (!f) { printf("Cannot open: %s\n", filename); return; }
+    if (!f) {
+        printf("Cannot open: %s\n", filename);
+        return;
+    }
     int size = circular_queue_size(q);
     if (binary) {
         fwrite(&size, sizeof(int), 1, f);
@@ -130,7 +140,10 @@ void circular_queue_save_to_file(CircularQueue *q, const char *filename, _Bool b
 
 void circular_queue_load_from_file(CircularQueue *q, const char *filename, _Bool binary) {
     FILE *f = fopen(filename, binary ? "rb" : "r");
-    if (!f) { printf("Cannot open: %s\n", filename); return; }
+    if (!f) {
+        printf("Cannot open: %s\n", filename);
+        return;
+    }
     int size;
     if (binary) {
         fread(&size, sizeof(int), 1, f);
@@ -151,7 +164,9 @@ void circular_queue_load_from_file(CircularQueue *q, const char *filename, _Bool
 }
 
 void circular_queue_menu() {
-    int cap; printf("Circular queue capacity: "); scanf("%d", &cap);
+    int cap;
+    printf("Circular queue capacity: ");
+    scanf("%d", &cap);
     CircularQueue *q = circular_queue_create(cap);
     int choice;
 
@@ -159,68 +174,70 @@ void circular_queue_menu() {
         printf("\nCircular queue menu:\n");
         printf("1 - Enqueue\n2 - Dequeue\n3 - Peek\n4 - Display\n");
         printf("5 - Find by no\n6 - Find by position\n7 - Save\n8 - Load\n0 - Exit\n");
-        printf("Choice: "); scanf("%d", &choice);
+        printf("Choice: ");
+        scanf("%d", &choice);
         switch (choice) {
             case 1: {
-                    uBankCustomer c;
-                    u_read_customer(&c, stdin);
-                    circular_queue_enqueue(q, c);
-                }
-                break;
+                uBankCustomer c;
+                u_read_customer(&c, stdin);
+                circular_queue_enqueue(q, c);
+            }
+            break;
             case 2: {
-                    uBankCustomer c = circular_queue_dequeue(q);
-                    if (c.account_no)
-                        u_display_bank_customer(&c, stdout);
-                }
-                break;
+                uBankCustomer c = circular_queue_dequeue(q);
+                if (c.account_no)
+                    u_display_bank_customer(&c, stdout);
+            }
+            break;
             case 3: {
-                    uBankCustomer c = circular_queue_peek(q);
-                    if (c.account_no)
-                        u_display_bank_customer(&c, stdout);
-                }
-                break;
+                uBankCustomer c = circular_queue_peek(q);
+                if (c.account_no)
+                    u_display_bank_customer(&c, stdout);
+            }
+            break;
             case 4:
                 circular_queue_print(q, stdout);
                 break;
             case 5: {
-                    int no;
-                    printf("Account No: ");
-                    scanf("%d", &no);
-                    uBankCustomer *c = circular_queue_find_by_no(q, no);
-                    if (c)
-                        u_display_bank_customer(c, stdout);
-                    else
-                        printf("Not found.\n");
-                }
-                break;
+                int no;
+                printf("Account No: ");
+                scanf("%d", &no);
+                uBankCustomer *c = circular_queue_find_by_no(q, no);
+                if (c)
+                    u_display_bank_customer(c, stdout);
+                else
+                    printf("Not found.\n");
+            }
+            break;
             case 6: {
-                    int p;
-                    printf("Position: ");
-                    scanf("%d", &p);
-                    uBankCustomer *c = circular_queue_find_by_position(q, p);
-                    if (c)
-                        u_display_bank_customer(c, stdout);
-                }
-                break;
+                int p;
+                printf("Position: ");
+                scanf("%d", &p);
+                uBankCustomer *c = circular_queue_find_by_position(q, p);
+                if (c)
+                    u_display_bank_customer(c, stdout);
+            }
+            break;
             case 7: {
-                    char fn[256];
-                    int m;
-                    printf("File: ");
-                    scanf("%255s", fn);
-                    printf("Mode (0=text,1=bin): ");
-                    scanf("%d", &m);
-                    circular_queue_save_to_file(q, fn, m);
-                }
-                break;
+                char fn[256];
+                int m;
+                printf("File: ");
+                scanf("%255s", fn);
+                printf("Mode (0=text,1=bin): ");
+                scanf("%d", &m);
+                circular_queue_save_to_file(q, fn, m);
+            }
+            break;
             case 8: {
-                    char fn[256];
-                    int m; printf("File: ");
-                    scanf("%255s", fn);
-                    printf("Mode (0=text,1=bin): ");
-                    scanf("%d", &m);
-                    circular_queue_load_from_file(q, fn, m);
-                }
-                break;
+                char fn[256];
+                int m;
+                printf("File: ");
+                scanf("%255s", fn);
+                printf("Mode (0=text,1=bin): ");
+                scanf("%d", &m);
+                circular_queue_load_from_file(q, fn, m);
+            }
+            break;
             case 0: break;
             default: printf("Unknown.\n");
         }
